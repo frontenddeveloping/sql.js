@@ -4,7 +4,7 @@
 	<head>
 		<meta charset="utf8">
 		<title>SQL REPL</title>
-		<script src="../dist/sql-wasm.js"></script>
+		<script src="../js/sql.js"></script>
 	</head>
 	<body>
 	<input type='text' id='input' placeholder="ENTER SOME SQL" size='50'
@@ -15,10 +15,7 @@
 	<script>
 
 //Open a blank database
-var db;
-initSqlJs({ locateFile: filename => `../dist/${filename}` }).then(function(SQL){
-  db = new SQL.Database();
-});
+var db = new SQL.Database();
 
 document.getElementById('submit').onclick = function(){
 	var sql = document.getElementById('input').value;
