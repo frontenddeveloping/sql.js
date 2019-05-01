@@ -1,39 +1,10 @@
-
-// TODO: Instead of using tiny-worker, we could use the new Node 11 workers via
-// node --experimental-worker test/all.js 
-// Then we could do this:
-//const { Worker } = require('worker_threads');
-// But it turns out that the worker_threads interface is just different enough not to work. 
-var Worker = require("tiny-worker");
+var Worker = require("workerjs");
 var path = require("path");
 
 exports.test = function(notUsed, assert, done) {
-  
-  // We keep running into issues trying to simulate the worker environment.
-  // We really need headless testing of some sort
-  console.error("Skipping: This test is 'expected' to fail because tiny-worker and workerjs don't simulate the environment well enough");
-  done();
-  return;
-
-  // If it thinks it is running in a worker rather than Node, a few things fail. To fix it, in the code replace this:
-  //
-  //ENVIRONMENT_IS_WORKER = typeof importScripts === 'function';
-  //ENVIRONMENT_IS_NODE = typeof process === 'object' && typeof require === 'function' && !ENVIRONMENT_IS_WEB && !ENVIRONMENT_IS_WORKER;
-  // 
-  // With this:
-  //
-  //ENVIRONMENT_IS_NODE = typeof process === 'object' && typeof require === 'function' && !ENVIRONMENT_IS_WEB;
-  //ENVIRONMENT_IS_WORKER = typeof importScripts === 'function' && !ENVIRONMENT_IS_NODE;
-  //
-
   var target = process.argv[2];
-  var file = target ? "sql-"+target : "sql-wasm";
-  // If we use tiny-worker, we need to pass in this new cwd as the root of the file being loaded:
-  const filename = "../dist/worker."+file+".js";
-  var worker = new Worker(path.join(__dirname, filename), null, { cwd: path.join(__dirname, "../dist/") });
-  
-  // The following tests are continually overwriting worker.onmessage so that they 
-
+  var file = target ? "sql-"+target : "sql";
+  var worker = new Worker(path.join(__dirname, "../js/worker."+file+".js"));
   worker.onmessage = function(event) {
     var data = event.data;
     assert.strictEqual(data.id, 1, "Return the given id in the correct format");
@@ -87,7 +58,6 @@ exports.test = function(notUsed, assert, done) {
     });
   }
   worker.onerror = function (e) {
-    // This doesn't appear to get thrown if there is an eval error in the worker
     console.log("Threw error: ", e);
     assert.fail(new Error(e),null,"Sould not throw an error");
     done();
@@ -107,12 +77,7 @@ if (!Array.from) {
 }
 
 if (module == require.main) {
-  process.on('unhandledRejection', r => console.log(r));
-
-  require('test').run({
-    'test worker': function(assert, done){
-      exports.test(null, assert, done);
-    }
-  });
-
+  var assert = require("assert");
+  var done = function(){process.exit(0)};
+  exports.test(null, assert, done);
 }

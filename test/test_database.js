@@ -50,12 +50,9 @@ exports.test = function(sql, assert, done) {
   }, function last () {
     finished = true;
     assert.strictEqual(count, 2, "db.each returns the right number of rows");
-    // No need to wait for this timeout anymore
-    // In fact, if we do keep waiting for this, we'll get an error when it fires because we've already called done
-    clearTimeout(testTimeoutId);
     done();
   });
-  var testTimeoutId = setTimeout(function timeout(){
+  var timeout = setTimeout(function timeout(){
     assert.strictEqual(finished, true,
                        "db.each should call its last callback after having returned the rows");
     done();
@@ -63,17 +60,8 @@ exports.test = function(sql, assert, done) {
 };
 
 if (module == require.main) {
-	const target_file = process.argv[2];
-  const sql_loader = require('./load_sql_lib');
-  sql_loader(target_file).then((sql)=>{
-    require('test').run({
-      'test database': function(assert, done){
-        exports.test(sql, assert, done);
-      }
-    });
-  })
-  .catch((e)=>{
-    console.error(e);
-    assert.fail(e);
-  });
+  var sql = require('../js/sql.js');
+  var assert = require('assert');
+  var done = function(){process.exit();}
+  exports.test(sql, assert, done);
 }
